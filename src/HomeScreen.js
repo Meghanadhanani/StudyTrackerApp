@@ -364,7 +364,16 @@ const HomeScreen = () => {
               onToggleLecture={toggleLecture}
               onEdit={handleEdit}
               onDelete={handleDelete}
-              onPress={() => navigation.navigate('NoteDetail', { note })}
+              onPress={() => navigation.navigate('NoteDetail', { 
+                note,
+                onUpdate: (updatedNote) => {
+                  const updatedNotes = notes.map(n => 
+                    n.id === updatedNote.id ? updatedNote : n
+                  );
+                  setNotes(updatedNotes);
+                  saveNotes(updatedNotes);
+                }
+              })}
             />
           ))}
 
@@ -589,6 +598,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
   },
+  // eslint-disable-next-line no-dupe-keys
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -802,7 +812,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 16,
   },
   dateText: {
     color: '#666',

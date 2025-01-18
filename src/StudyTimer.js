@@ -93,6 +93,7 @@ const StudyTimer = () => {
                   Vibration.cancel();
                   alarm.stop();
                   alarm.release();
+                  saveTimerSession();
                   resetTimer();
                 },
                 style: 'cancel',
@@ -114,6 +115,7 @@ const StudyTimer = () => {
       Alert.alert('Timer Complete', 'Timer completed!');
     }
   };
+
   const formatTime = totalSeconds => {
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -140,6 +142,7 @@ const StudyTimer = () => {
 
       setTimerSeconds(totalSeconds);
       setInitialSeconds(totalSeconds);
+      setSessionStartTime(new Date()); // Set start time when timer starts
     }
 
     setIsRunning(true);
@@ -171,11 +174,35 @@ const StudyTimer = () => {
     setIsStopwatchRunning(false);
   };
 
+  const saveTimerSession = () => {
+    if (sessionStartTime && initialSeconds > 0) {
+      const sessionEndTime = new Date();
+      const newSession = {
+        name: `Study Session ${sessions.length + 1}`,
+        duration: initialSeconds - timerSeconds, // Actual time spent
+        startTime: sessionStartTime,
+        endTime: sessionEndTime,
+        formattedDuration: formatTime(initialSeconds - timerSeconds),
+      };
+
+      setSessions(prev => [newSession, ...prev]);
+      setSessionStartTime(null);
+    }
+  };
+
   const resetStopwatch = () => {
     clearInterval(stopwatchRef.current);
     setIsStopwatchRunning(false);
     if (stopwatchTime > 0) {
-      saveSession(stopwatchTime);
+      const sessionEndTime = new Date();
+      const newSession = {
+        name: `Study Session ${sessions.length + 1}`,
+        duration: stopwatchTime,
+        startTime: sessionStartTime,
+        endTime: sessionEndTime,
+        formattedDuration: formatTime(stopwatchTime),
+      };
+      setSessions(prev => [newSession, ...prev]);
     }
     setStopwatchTime(0);
     setSessionStartTime(null);
@@ -185,20 +212,6 @@ const StudyTimer = () => {
     clearInterval(timerRef.current);
     setIsRunning(false);
     setIsPaused(true);
-  };
-
-  const saveSession = duration => {
-    const sessionEndTime = new Date();
-    const newSession = {
-      name: `Study Session ${sessions.length + 1}`,
-      duration: duration,
-      startTime: sessionStartTime,
-      endTime: sessionEndTime,
-      formattedDuration: formatTime(duration),
-    };
-
-    setSessions(prev => [newSession, ...prev]);
-    setSessionStartTime(null);
   };
 
   const resetTimer = () => {
@@ -218,7 +231,6 @@ const StudyTimer = () => {
       endTime,
     ).toLocaleTimeString()}`;
   };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}

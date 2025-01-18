@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "TrackerApp.app"
-               BlueprintName = "TrackerApp"
-               ReferencedContainer = "container:TrackerApp.xcodeproj">
+               BuildableName = "CAspire.app"
+               BlueprintName = "CAspire"
+               ReferencedContainer = "container:CAspire.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "TrackerAppTests.xctest"
-               BlueprintName = "TrackerAppTests"
-               ReferencedContainer = "container:TrackerApp.xcodeproj">
+               BuildableName = "CAspireTests.xctest"
+               BlueprintName = "CAspireTests"
+               ReferencedContainer = "container:CAspire.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "TrackerApp.app"
-            BlueprintName = "TrackerApp"
-            ReferencedContainer = "container:TrackerApp.xcodeproj">
+            BuildableName = "CAspire.app"
+            BlueprintName = "CAspire"
+            ReferencedContainer = "container:CAspire.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "TrackerApp.app"
-            BlueprintName = "TrackerApp"
-            ReferencedContainer = "container:TrackerApp.xcodeproj">
+            BuildableName = "CAspire.app"
+            BlueprintName = "CAspire"
+            ReferencedContainer = "container:CAspire.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

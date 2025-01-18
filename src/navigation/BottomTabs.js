@@ -6,6 +6,7 @@ import Categories from '../Categories';
 import Components from '../Components';
 import HomeScreen from '../HomeScreen';
 import StudyTimer from '../StudyTimer';
+import UsersScreen from '../UsersScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -90,6 +91,13 @@ export const BottomTabs = () => {
       <Tab.Screen 
         name="Categories" 
         component={Categories}
+        options={{
+          tabBarLabel: 'Categories',
+        }}
+      />
+      <Tab.Screen 
+        name="UsersScreen" 
+        component={UsersScreen}
         options={{
           tabBarLabel: 'Categories',
         }}
