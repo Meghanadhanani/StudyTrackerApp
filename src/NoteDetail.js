@@ -2,12 +2,17 @@ import {SafeAreaView, StyleSheet, Text, TextInput, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import CustomBackButton from './navigation/BackBtn';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import StorageUtils from './common/StorageUtils';
 
 const NoteDetail = ({route}) => {
   const {note} = route.params;
   console.log('NOteeeee', note);
   const [text, setText] = useState('');
+  
+  const userInfo = StorageUtils.getUserInfo();
+  console.log('User Info:', userInfo.username);
   useEffect(() => {
+    
     const loadText = async () => {
       const savedText = await AsyncStorage.getItem('savedText');
       if (savedText) setText(savedText);
@@ -20,7 +25,7 @@ const NoteDetail = ({route}) => {
   };
   return (
     <SafeAreaView>
-      <CustomBackButton title={'Note Details'} />
+      <CustomBackButton title={'Note Details'} showIcon={true} />
       <View style={{paddingHorizontal: 25}}>
         <Text style={styles.headingtext}>{note.title}</Text>
         <Text style={styles.date}>{note.date}</Text>

@@ -1,170 +1,147 @@
-import React, { useEffect, useRef } from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Animated,
   Dimensions,
+  TouchableOpacity,
+  SafeAreaView,
   Platform,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather'; // Import Feather icons
+import SplashIllustration from './assets/SplashIllustration';
+import StorageUtils from './common/StorageUtils';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-const SplashScreen = ({ navigation }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  const titleFade = useRef(new Animated.Value(0)).current;
-  const subtitleFade = useRef(new Animated.Value(0)).current;
-
+const SplashScreen = ({navigation}) => {
   useEffect(() => {
-    // Initial animation sequence
-    Animated.sequence([
-      // Fade in and scale the illustration
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ]),
-      // Fade in the title
-      Animated.timing(titleFade, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      // Fade in the subtitle
-      Animated.timing(subtitleFade, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    checkAuthStatus();
+  }, []);
 
-    // Navigate to Main after 3.5 seconds
-    const timer = setTimeout(() => {
-      navigation.replace('Main');
-    }, 3500);
+  const checkAuthStatus = async () => {
+    try {
+      const token = await StorageUtils.getToken();  // Get the token instead of storeToken
+      console.log('Token:', token);
+      const userInfo = await StorageUtils.getUserInfo();
+      console.log('User Info:', userInfo.username);
+      console.log('User Info:', userInfo);
+      setTimeout(() => {
+        if (token) {
+          navigation.replace('Main');
+        } else {
+          navigation.replace('SignUp');
+        }
+      }, 2000);
+    } catch (error) {
+      console.error('Error checking auth status:', error);
 
-    return () => clearTimeout(timer);
-  }, [navigation]);
+      navigation.replace('SignUp');
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Main Content */}
+    <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Animated Icon */}
-        <Animated.View
-          style={[
-            styles.illustrationContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <Icon name="book" size={100} color="#fff" style={styles.icon} />
-        </Animated.View>
-
-        {/* Animated Texts */}
+        <View style={styles.illustrationContainer}>
+          <SplashIllustration
+            width={width * 0.85}
+            height={width * 0.85}
+            style={styles.illustration}
+          />
+        </View>
         <View style={styles.textContainer}>
-          <Animated.Text
-            style={[
-              styles.title,
-              { opacity: titleFade },
-            ]}
-          >
-            Study Tracker
-          </Animated.Text>
-          <Animated.Text
-            style={[
-              styles.subtitle,
-              { opacity: subtitleFade },
-            ]}
-          >
-            Track your progress, achieve your goals
-          </Animated.Text>
+          <Text style={styles.title}>Track Your Study Progress</Text>
+          <Text style={styles.subtitle}>
+            Organize your learning journey and boost your productivity
+          </Text>
+        </View>
+        <View style={styles.dotsContainer}>
+          <View style={[styles.dot, styles.activeDot]} />
+          <View style={styles.dot} />
+          <View style={styles.dot} />
         </View>
       </View>
-
-      {/* Bottom Decoration */}
-      <View style={styles.bottomDecoration}>
-        <View style={[styles.circle, { backgroundColor: '#4B9F89' }]} />
-        <View style={[styles.circle, { backgroundColor: '#F63E38' }]} />
-        <View style={[styles.circle, { backgroundColor: '#FFE3E0' }]} />
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#4B9F89', // Background gradient-like feel
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: '#F5F5F5',
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 40,
-  },
-  illustrationContainer: {
-    marginBottom: 40,
-    backgroundColor: '#F63E38', // Adding a background color behind the icon for contrast
-    borderRadius: 12,
-    padding: 20,
-  },
-  icon: {
-    shadowColor: '#000', // Shadow effect for the icon
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8, // Android shadow effect
+    // flex: 5,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    paddingVertical: Platform.OS === 'ios' ? 40 : 20,
   },
   textContainer: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    // marginTop: 20,
   },
   title: {
-    fontSize: 36,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff', // White color for title
+    color: '#2C3E50',
+    lineHeight: 40,
     marginBottom: 12,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
-    textShadowColor: '#000',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
-    color: '#fff', // White color for subtitle
-    textAlign: 'center',
+    fontSize: 16,
+    color: '#34495E',
+    opacity: 0.8,
+    lineHeight: 24,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-    opacity: 0.7, // Slight opacity to create softness
+    textAlign: 'center',
   },
-  bottomDecoration: {
-    flexDirection: 'row',
+  illustrationContainer: {
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 40,
-    gap: 8,
-    marginTop: 30,
+    marginVertical: 50,
   },
-  circle: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#fff', // Border color for circles to make them stand out
+  illustration: {
+    marginVertical: 20,
+  },
+  bottomContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 0 : 20,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F63E38',
+  },
+  activeDot: {
+    width: 24,
+    backgroundColor: '#4B9F89',
+  },
+  nextButton: {
+    backgroundColor: '#3498DB',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
   },
 });
 

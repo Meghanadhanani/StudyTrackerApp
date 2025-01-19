@@ -6,7 +6,7 @@ import Categories from '../Categories';
 import Components from '../Components';
 import HomeScreen from '../HomeScreen';
 import StudyTimer from '../StudyTimer';
-import UsersScreen from '../UsersScreen';
+import LogoutScreen from '../auth/LogoutScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -31,6 +31,9 @@ export const BottomTabs = () => {
           } else if (route.name === 'Categories') {
             iconName = 'appstore-o';
           }
+           else if (route.name === 'LogoutScreen') {
+            iconName = 'bars';
+          }
 
           return <Icon name={iconName} size={24} color={color} />;
         },
@@ -39,7 +42,7 @@ export const BottomTabs = () => {
         tabBarStyle: {
           borderTopLeftRadius: 25,
           borderTopRightRadius: 25,
-          height: 65,
+          height: 70,
           shadowOffset: {
             width: 0,
             height: 5,
@@ -49,18 +52,18 @@ export const BottomTabs = () => {
           elevation: 5
         },
         tabBarItemStyle: {
-          paddingVertical: 5,
+          paddingVertical: 7,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: '500',
         },
         headerShown: false,
         tabBarBackground: () => (
           <View style={{ 
             backgroundColor: "#FFF6F5",
-            borderTopLeftRadius: 25,
-            borderTopRightRadius: 25,
+            // borderTopLeftRadius: 25,
+            // borderTopRightRadius: 25,
             height: '100%',
             borderWidth: 1,
           }}/>
@@ -96,10 +99,10 @@ export const BottomTabs = () => {
         }}
       />
       <Tab.Screen 
-        name="UsersScreen" 
-        component={UsersScreen}
+        name="LogoutScreen" 
+        component={LogoutScreen}
         options={{
-          tabBarLabel: 'Categories',
+          tabBarLabel: 'More',
         }}
       />
     </Tab.Navigator>

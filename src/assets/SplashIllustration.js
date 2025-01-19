@@ -1,7 +1,8 @@
-import * as React from "react";
-import Svg, { Circle, Path, Rect, Line } from "react-native-svg";
+import React from 'react';
+import Svg, { Circle, Path, Rect, Line } from 'react-native-svg';
+
 const SplashIllustration = (props) => (
-  <Svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <Svg viewBox="0 0 400 400" {...props}>
     <Circle cx={200} cy={200} r={150} fill="#EAF5F2" opacity={0.5} />
     <Circle cx={320} cy={100} r={30} fill="#FFE3E0" opacity={0.6} />
     <Circle cx={80} cy={320} r={40} fill="#4B9F89" opacity={0.1} />
@@ -30,17 +31,11 @@ const SplashIllustration = (props) => (
       strokeWidth={3}
     />
     <Line x1={200} y1={100} x2={200} y2={85} stroke="#333333" strokeWidth={2} />
-    <Line
-      x1={200}
-      y1={100}
-      x2={210}
-      y2={100}
-      stroke="#333333"
-      strokeWidth={2}
-    />
+    <Line x1={200} y1={100} x2={210} y2={100} stroke="#333333" strokeWidth={2} />
     <Circle cx={320} cy={150} r={8} fill="#F63E38" />
     <Circle cx={80} cy={150} r={6} fill="#4B9F89" />
     <Circle cx={350} cy={250} r={10} fill="#FFE3E0" />
   </Svg>
 );
+
 export default SplashIllustration;

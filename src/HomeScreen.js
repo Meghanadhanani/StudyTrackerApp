@@ -1,9 +1,12 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Platform, Modal, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Platform, Modal, TextInput, Dimensions } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
+import StorageUtils from './common/StorageUtils';
+import SplashIllustration from './assets/SplashIllustration';
+const {width} = Dimensions.get('window');
 
 const NoteCard = ({ id, title, lectures, totalLectures, completedLectures, subject, date, onToggleLecture, onEdit, onDelete, onPress }) => {
   const [expanded, setExpanded] = useState(false);
@@ -250,9 +253,23 @@ const HomeScreen = () => {
   const [notes, setNotes] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
-
+  const [username, setUsername] = useState('');
   useEffect(() => {
-    loadNotes();
+    const fetchUserInfo = async () => {
+      const userInfo = await StorageUtils.getUserInfo();
+      if (userInfo && userInfo.username) {
+        setUsername(userInfo.username); // Assuming userInfo has a 'username' property
+      } else {
+        console.log('User Info is not available or username is missing');
+      }
+    };
+  
+    fetchUserInfo();
+  }, []);
+  
+  
+  useEffect(() => {
+     loadNotes();
   }, []);
 
   const loadNotes = async () => {
@@ -337,7 +354,7 @@ const HomeScreen = () => {
             </View>
             <View style={styles.greeting}>
               <Text style={styles.greetingText}>Good Morning</Text>
-              <Text style={styles.nameText}>Mr. C.A.</Text>
+              <Text style={styles.nameText}>{username}</Text>
             </View>
           </View>
           <View style={styles.headerIcons}>
@@ -387,7 +404,15 @@ const HomeScreen = () => {
 
           <View style={styles.bottomPadding} />
         </ScrollView>
-
+        {notes.length < 1 && (
+  <View style={styles.illustrationContainer}>
+    <SplashIllustration
+      width={width * 0.85}
+      height={width * 0.85}
+      style={styles.illustration}
+    />
+  </View>
+)}
         <AddNoteModal
           visible={modalVisible}
           onClose={closeModal}
@@ -419,6 +444,10 @@ const styles = StyleSheet.create({
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
+  },  illustrationContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 50,
   },
   avatar: {
     width: 45,
@@ -642,6 +671,7 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 16,
     backgroundColor: '#f8f8f8',
+    color:"#121212"
   },
   lectureHeader: {
     flexDirection: 'row',
@@ -681,6 +711,7 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 16,
     backgroundColor: '#f8f8f8',
+    color:"#121212"
   },
   modalFooter: {
     padding: 20,
