@@ -6,17 +6,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import StorageUtils from './common/StorageUtils';
 import SplashIllustration from './assets/SplashIllustration';
+import { NOTES } from './API/APIHelper';
+import axios from 'axios';
 const {width} = Dimensions.get('window');
 
-const NoteCard = ({ id, title, lectures, totalLectures, completedLectures, subject, date, onToggleLecture, onEdit, onDelete, onPress }) => {
+const NoteCard = ({ id, title, lectures = [], totalLectures = 0, completedLectures = [], subject, date, onToggleLecture, onEdit, onDelete, onPress }) => {
   const [expanded, setExpanded] = useState(false);
+
   const initialVisibleLectures = 6;
-  const hasMoreLectures = lectures.length > initialVisibleLectures;
-  
-  const displayedLectures = expanded ? lectures : lectures.slice(0, initialVisibleLectures);
-  
+  const hasMoreLectures = lectures?.length > initialVisibleLectures;
+  const displayedLectures = expanded ? lectures : lectures?.slice(0, initialVisibleLectures);
+
   const calculateProgress = () => {
-    return Math.round((completedLectures.length / totalLectures) * 100);
+    if (!completedLectures || !totalLectures) return 0;
+    return Math.round(((completedLectures?.length || 0) / (totalLectures || 1)) * 100);
   };
 
   return (
@@ -125,24 +128,43 @@ const AddNoteModal = ({ visible, onClose, onAdd, editNote = null }) => {
     }
   }, [editNote, visible]);
   const handleSubmit = () => {
+    // Validate required fields
+    if (!title.trim()) {
+        Alert.alert('Error', 'Title is required');
+        return;
+    }
+
+    // Filter out empty lectures and ensure it's an array
+    const filteredLectures = lectures.filter(lec => lec && lec.trim() !== '');
+    const totalLecturesValue = parseInt(totalLectures) || filteredLectures.length;
+
+    if (totalLecturesValue <= 0) {
+        Alert.alert('Error', 'Total lectures must be greater than 0');
+        return;
+    }
+
     const noteData = {
-      id: editNote?.id || Date.now(),
-      title,
-      lectures: lectures.filter(lec => lec.trim() !== ''),
-      totalLectures: parseInt(totalLectures),
-      completedLectures: editNote?.completedLectures || [],
-      subject,
-      date: editNote?.date || new Date().toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      })
+        title: title.trim(),
+        lectures: filteredLectures,
+        totalLectures: totalLecturesValue,
+        subject: subject.trim() || 'Unknown',
+        completedLectures: [], // Always empty for new notes
+        date: new Date().toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        })
     };
 
+    // Remove the client-side generated ID as the server will assign one
+    if (editNote?.id) {
+        noteData.id = editNote.id;
+    }
+
+    console.log("Submitting note data:", noteData);
     onAdd(noteData);
-    onClose();
-    resetForm();
-  };
+};
+  
 
   const resetForm = () => {
     setTitle('');
@@ -254,83 +276,156 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
   const [username, setUsername] = useState('');
+
+  // Load notes when component mounts
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      const userInfo = await StorageUtils.getUserInfo();
-      if (userInfo && userInfo.username) {
-        setUsername(userInfo.username); // Assuming userInfo has a 'username' property
-      } else {
-        console.log('User Info is not available or username is missing');
-      }
-    };
-  
-    fetchUserInfo();
-  }, []);
-  
-  
-  useEffect(() => {
-     loadNotes();
+    loadNotes();
   }, []);
 
   const loadNotes = async () => {
     try {
-      const savedNotes = await AsyncStorage.getItem('notes');
-      if (savedNotes) {
-        setNotes(JSON.parse(savedNotes));
+      const token = await StorageUtils.getToken();
+      console.log("Fetching notes from:", NOTES);
+      const response = await axios.get(NOTES, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("Response from API:", response.data);
+
+      if (response.data.success) {
+        setNotes(response.data.notes); // Assuming the API returns notes in 'notes' array
+      } else {
+        console.warn("API response success is false:", response.data);
       }
     } catch (error) {
-      console.error('Error loading notes:', error);
+      console.error("Error loading notes:", error);
+      Alert.alert("Error", "Failed to load notes");
     }
   };
-
-  const saveNotes = async (updatedNotes) => {
+  const handleAddOrUpdate = async (noteData) => {
     try {
-      await AsyncStorage.setItem('notes', JSON.stringify(updatedNotes));
+        const token = await StorageUtils.getToken();
+        
+        // Clean up the data
+        const formattedData = {
+            title: noteData.title.trim(),
+            lectures: noteData.lectures.map(lec => lec.trim()).filter(lec => lec.length > 0),
+            totalLectures: parseInt(noteData.totalLectures),
+            subject: noteData.subject.trim(),
+            completedLectures: [], // Initialize empty for new notes
+            date: new Date().toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            })
+        };
+
+        // If editing an existing note
+        if (noteData.id && editingNote) {
+            const response = await axios.put(
+                `${NOTES}/${noteData.id}`, 
+                formattedData,
+                {
+                    headers: { 
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                }
+            );
+            
+            if (response.data.success) {
+                setNotes(prevNotes => 
+                    prevNotes.map(note => 
+                        note.id === noteData.id ? response.data.note : note
+                    )
+                );
+                setModalVisible(false);
+                setEditingNote(null);
+            }
+        } 
+        // If creating a new note
+        else {
+            const response = await axios.post(
+                NOTES, 
+                formattedData,
+                {
+                    headers: { 
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                }
+            );
+            
+            if (response.data.success) {
+                setNotes(prevNotes => [...prevNotes, response.data.note]);
+                setModalVisible(false);
+                setEditingNote(null);
+            }
+        }
+        
     } catch (error) {
-      console.error('Error saving notes:', error);
+        console.error('Error details:', error.response?.data || error.message);
+        Alert.alert(
+            'Error',
+            error.response?.data?.message || 'Failed to save note. Please try again.'
+        );
     }
-  };
+};
 
-  const handleAddOrUpdate = (noteData) => {
-    const updatedNotes = editingNote 
-      ? notes.map(note => note.id === noteData.id ? noteData : note)
-      : [...notes, noteData];
-    setNotes(updatedNotes);
-    saveNotes(updatedNotes);
-    setEditingNote(null);
-  };
-
-  const handleDelete = (noteId) => {
+  const handleDelete = async (noteId) => {
     Alert.alert(
       "Delete Note",
       "Are you sure you want to delete this note?",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
+        {
+          text: "Delete",
           style: "destructive",
-          onPress: () => {
-            const updatedNotes = notes.filter(note => note.id !== noteId);
-            setNotes(updatedNotes);
-            saveNotes(updatedNotes);
+          onPress: async () => {
+            try {
+              const token = await StorageUtils.getToken();
+              const response = await axios.delete(`${NOTES}/${noteId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+
+              if (response.data.success) {
+                const updatedNotes = notes.filter(note => note.id !== noteId);
+                setNotes(updatedNotes);
+              }
+            } catch (error) {
+              console.error('Error deleting note:', error);
+              Alert.alert('Error', 'Failed to delete note');
+            }
           }
         }
       ]
     );
   };
 
-  const toggleLecture = (noteId, lectureIndex) => {
-    const updatedNotes = notes.map(note => {
-      if (note.id === noteId) {
-        const completedLectures = note.completedLectures.includes(lectureIndex)
-          ? note.completedLectures.filter(i => i !== lectureIndex)
-          : [...note.completedLectures, lectureIndex];
-        return { ...note, completedLectures };
+  const toggleLecture = async (noteId, lectureIndex) => {
+    try {
+      const note = notes.find(n => n.id === noteId);
+      const completedLectures = note.completed_lectures.includes(lectureIndex)
+        ? note.completed_lectures.filter(i => i !== lectureIndex)
+        : [...note.completed_lectures, lectureIndex];
+
+      const token = await StorageUtils.getToken();
+      const response = await axios.put(
+        `${NOTES}/${noteId}`,
+        { ...note, completedLectures },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        const updatedNotes = notes.map(n =>
+          n.id === noteId ? response.data.note : n
+        );
+        setNotes(updatedNotes);
       }
-      return note;
-    });
-    setNotes(updatedNotes);
-    saveNotes(updatedNotes);
+    } catch (error) {
+      console.error('Error updating lecture status:', error);
+      Alert.alert('Error', 'Failed to update lecture status');
+    }
   };
 
   const handleEdit = (noteId) => {
@@ -344,47 +439,62 @@ const HomeScreen = () => {
     setEditingNote(null);
   };
 
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const userInfo = await StorageUtils.getUserInfo();
+      if (userInfo && userInfo.username) {
+        setUsername(userInfo.username);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  const saveNotes = async (updatedNotes) => {
+    try {
+      await AsyncStorage.setItem('notes', JSON.stringify(updatedNotes));
+    } catch (error) {
+      console.error('Error saving notes:', error);
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.profileSection}>
-            <View style={styles.avatar}>
-              <Icon name="user" size={24} color="#333" />
-            </View>
-            <View style={styles.greeting}>
-              <Text style={styles.greetingText}>Good Morning</Text>
-              <Text style={styles.nameText}>{username}</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={{ flex: 1, padding: 20 }}>
+        {/* Header Section */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row' }}>
+            <Icon name="user" size={24} color="#333" />
+            <View style={{ marginLeft: 10 }}>
+              <Text style={{ fontSize: 18 }}>Good Morning</Text>
+              <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{username}</Text>
             </View>
           </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
+          <View style={{ flexDirection: 'row' }}>
+            <TouchableOpacity style={{ marginLeft: 10 }}>
               <Icon name="search1" size={24} color="#FF7466" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={{ marginLeft: 10 }}>
               <Icon name="bells" size={24} color="#FF7466" />
             </TouchableOpacity>
           </View>
         </View>
 
-        <Text style={styles.title}>Notes</Text>
+        {/* Notes Section */}
+        <Text style={{ fontSize: 24, fontWeight: 'bold', marginTop: 20 }}>Notes</Text>
 
-        <ScrollView 
-          style={styles.notesContainer}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <ScrollView style={{ marginTop: 10 }}>
           {notes.map((note) => (
-            <NoteCard 
-              key={note.id} 
-              {...note} 
+            <NoteCard
+              key={note.id}
+              {...note}
               onToggleLecture={toggleLecture}
               onEdit={handleEdit}
               onDelete={handleDelete}
-              onPress={() => navigation.navigate('NoteDetail', { 
+              onPress={() => navigation.navigate('NoteDetail', {
                 note,
                 onUpdate: (updatedNote) => {
-                  const updatedNotes = notes.map(n => 
+                  const updatedNotes = notes.map(n =>
                     n.id === updatedNote.id ? updatedNote : n
                   );
                   setNotes(updatedNotes);
@@ -394,35 +504,33 @@ const HomeScreen = () => {
             />
           ))}
 
-          <TouchableOpacity 
-            style={styles.addNoteButton}
-            onPress={() => setModalVisible(true)}
-          >
+          {/* Add Note Button */}
+          <TouchableOpacity style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center' }} onPress={() => setModalVisible(true)}>
             <Icon name="plus" size={20} color="#4B9F89" />
-            <Text style={styles.addNoteText}>Add New Note</Text>
+            <Text style={{ marginLeft: 10, fontSize: 18 }}>Add New Note</Text>
           </TouchableOpacity>
-
-          <View style={styles.bottomPadding} />
         </ScrollView>
+
+        {/* Empty Notes Illustration */}
         {notes.length < 1 && (
-  <View style={styles.illustrationContainer}>
-    <SplashIllustration
-      width={width * 0.85}
-      height={width * 0.85}
-      style={styles.illustration}
-    />
-  </View>
-)}
-        <AddNoteModal
-          visible={modalVisible}
-          onClose={closeModal}
-          onAdd={handleAddOrUpdate}
-          editNote={editingNote}
-        />
+          <View style={{ justifyContent: 'center', alignItems: 'center', marginTop: 50 }}>
+            <SplashIllustration width={width * 0.85} height={width * 0.85} />
+          </View>
+        )}
       </View>
+
+      {/* Add/Edit Note Modal */}
+      <AddNoteModal
+        visible={modalVisible}
+        onClose={closeModal}
+        onAdd={handleAddOrUpdate}
+        editNote={editingNote}
+      />
     </SafeAreaView>
   );
 };
+
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -851,4 +959,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;

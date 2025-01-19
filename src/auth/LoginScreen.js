@@ -11,6 +11,7 @@ import {
   import axios from 'axios';
   import { LOGIN } from '../API/APIHelper';
 import StorageUtils from '../common/StorageUtils';
+import SplashIllustration from '../assets/SplashIllustration';
   
   const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -51,7 +52,11 @@ import StorageUtils from '../common/StorageUtils';
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.outerDiv}>
-          <Text style={styles.headerText}>Welcome Back!</Text>
+     <SplashIllustration
+            // width={width * 0.85}
+            // height={width * 0.85}
+            style={styles.illustration}
+          />
         </View>
         <View style={styles.formdiv}>
           <Text style={styles.welcomeText}>Login to your account</Text>
@@ -124,7 +129,7 @@ import StorageUtils from '../common/StorageUtils';
       fontWeight: '700',
     },
     formdiv: {
-      flex: 3,
+      flex: 2,
       backgroundColor: '#FAFAFA',
       borderTopRightRadius: 40,
       borderTopLeftRadius: 40,

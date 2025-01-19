@@ -20,7 +20,7 @@ const LogoutScreen = ({navigation}) => {
       const token = await StorageUtils.getToken();
       if (token) {
         console.log('Token found, removing it...');
-        await removeToken(); // Remove token if exists
+        await StorageUtils.removeToken(); // Remove token if exists
       }
       // await StorageUtils.clearAll();
       navigation.replace('SignUp');

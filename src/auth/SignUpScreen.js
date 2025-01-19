@@ -267,6 +267,7 @@ import React, {useState} from 'react';
 import axios from 'axios';
 import {SIGNUP} from '../API/APIHelper';
 import StorageUtils from '../common/StorageUtils';
+import SplashIllustration from '../assets/SplashIllustration';
 
 const SignUpScreen = ({navigation}) => {
   const [username, setUsername] = useState('');
@@ -313,7 +314,11 @@ const SignUpScreen = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.outerDiv}></View>
+      <View style={styles.outerDiv}><SplashIllustration
+            // width={width * 0.85}
+            // height={width * 0.85}
+            style={styles.illustration}
+          /></View>
       <View style={styles.formdiv}>
         <Text style={styles.welcomeText}>Create an account</Text>
 
@@ -380,7 +385,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4B9F89',
   },
   formdiv: {
-    flex: 3,
+    flex: 2.5,
     backgroundColor: '#FAFAFA',
     borderTopRightRadius: 40,
     borderTopLeftRadius: 40,

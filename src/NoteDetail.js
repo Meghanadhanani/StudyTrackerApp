@@ -9,8 +9,8 @@ const NoteDetail = ({route}) => {
   console.log('NOteeeee', note);
   const [text, setText] = useState('');
   
-  const userInfo = StorageUtils.getUserInfo();
-  console.log('User Info:', userInfo.username);
+  // const userInfo = StorageUtils.getUserInfo();
+  // console.log('User Info:', userInfo.username);
   useEffect(() => {
     
     const loadText = async () => {
